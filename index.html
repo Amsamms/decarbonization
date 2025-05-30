@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Energy Transition Technologies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Report Section I (Imperative): Summarized text; Key Drivers as interactive cards. Goal: Inform, engage. Method: HTML/Tailwind, JS for card interactions.
+        - Report Section II (Renewables): Summaries per tech, Advantages/Limitations (toggleable). Data from Table 1 visualized with Chart.js bar charts (LCOE, Capacity Factor) and an interactive HTML table. Goal: Inform, Compare. Method: HTML/Tailwind, JS for toggles & table, Chart.js.
+        - Report Section III (Storage): Summaries per tech category. Data from Table 2 visualized with Chart.js bar charts (Typical Duration, Round-Trip Efficiency) and an interactive HTML table. Goal: Inform, Compare. Method: HTML/Tailwind, JS for toggles & table, Chart.js.
+        - Report Section IV (Hydrogen): Summaries. Production data from Table 3 with Chart.js bar charts (CO2 Emissions, Cost). Utilization via interactive icon cards. Goal: Inform, Compare. Method: HTML/Tailwind, JS for cards, Chart.js.
+        - Report Section V (CCUS): Descriptive text for capture methods, toggleable details. Goal: Inform. Method: HTML/Tailwind, JS.
+        - Key enablers/considerations summarized in "Path Forward".
+        - All charts are Canvas-based (Chart.js). Icons use Unicode. Layouts use HTML/Tailwind. NO SVG/Mermaid. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .table-container { max-height: 400px; overflow-y: auto; }
+        .tab-button.active { border-color: #0d9488; color: #0d9488; font-weight: 600; }
+        .details-content { display: none; }
+        .details-content.open { display: block; }
+        .nav-link.active { color: #0d9488; font-weight: bold; border-bottom-width: 2px; border-color: #0d9488; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-teal-700">Energy Transition Explorer</span>
+                </div>                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#imperative" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">Imperative</a>
+                        <a href="#renewables" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">Renewables</a>
+                        <a href="#storage" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">Storage</a>
+                        <a href="#hydrogen" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">Hydrogen</a>
+                        <a href="#ccus" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">CCUS</a>
+                        <a href="#path-forward" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-teal-600">Path Forward</a>
+                        <a href="Decarbonization and Energy Transition Technologies_.pdf" download class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center">
+                            📄 Download Report
+                        </a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-700 hover:text-teal-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#imperative" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">Imperative</a>
+                <a href="#renewables" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">Renewables</a>
+                <a href="#storage" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">Storage</a>
+                <a href="#hydrogen" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">Hydrogen</a>
+                <a href="#ccus" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">CCUS</a>
+                <a href="#path-forward" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-teal-600">Path Forward</a>
+                <a href="Decarbonization and Energy Transition Technologies_.pdf" download class="bg-teal-600 hover:bg-teal-700 text-white block px-3 py-2 rounded-md text-base font-medium transition-colors mt-2">
+                    📄 Download Report
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <section id="imperative" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">The Imperative for Change</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">The global energy system is at a critical juncture, needing an urgent shift from fossil fuels to cleaner, sustainable sources. This transformation, known as "decarbonization" and the "energy transition," is driven by environmental needs, economic opportunities, and evolving energy security concerns. Decarbonization aims to reduce greenhouse gas emissions, while the energy transition signifies the structural change in how we produce, distribute, and consume energy, prioritizing renewables like solar and wind.</p>
+                <p class="text-md">This section explores why this transition is essential, outlining the core definitions, the forces compelling this global shift, and the international commitments guiding our collective efforts.</p>
+            </div>
+            <h3 class="text-2xl font-semibold text-slate-700 mb-4">Key Driving Forces</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="driver-card bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow">
+                    <h4 class="text-xl font-semibold text-teal-600 mb-2">🌍 Climate Change Mitigation</h4>
+                    <p>The primary driver is the urgent need to reduce GHG emissions to limit global warming, as outlined in the Paris Agreement. Energy production and use are major contributors to these emissions.</p>
+                </div>
+                <div class="driver-card bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow">
+                    <h4 class="text-xl font-semibold text-teal-600 mb-2">💰 Economic Opportunities</h4>
+                    <p>Investing in renewables and energy efficiency stimulates economic growth, creates jobs, and offers companies a competitive edge through cost savings and new market access.</p>
+                </div>
+                <div class="driver-card bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow">
+                    <h4 class="text-xl font-semibold text-teal-600 mb-2">🛡️ Energy Security</h4>
+                    <p>Shifting to domestic renewables reduces reliance on volatile international fossil fuel markets, enhancing national energy security and resilience against supply disruptions.</p>
+                </div>
+                <div class="driver-card bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow">
+                    <h4 class="text-xl font-semibold text-teal-600 mb-2">💡 Technological Advancements</h4>
+                    <p>Rapid cost reductions and performance improvements in technologies like solar PV, wind power, and batteries are making clean energy increasingly competitive.</p>
+                </div>
+                <div class="driver-card bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow">
+                    <h4 class="text-xl font-semibold text-teal-600 mb-2">❤️ Societal & Health Benefits</h4>
+                    <p>Public demand for sustainability and the significant public health benefits from reduced air pollution further accelerate decarbonization efforts.</p>
+                </div>
+            </div>
+             <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+                <h3 class="text-2xl font-semibold text-slate-700 mb-4">Global Commitments & International Bodies</h3>
+                <p class="mb-2">International agreements and organizations like the <strong class="text-teal-600">UNFCCC (Paris Agreement)</strong>, the <strong class="text-teal-600">International Energy Agency (IEA)</strong>, and the <strong class="text-teal-600">International Renewable Energy Agency (IRENA)</strong> are crucial. They set targets, foster cooperation, provide analysis, and mobilize finance. A key challenge is the "deployment gap" between ambitions and actual implementation, alongside ensuring a "just transition" that shares benefits equitably.</p>
+            </div>
+        </section>
+
+        <section id="renewables" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">Foundational Pillars: Renewable Energy Generation</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">Renewable energy technologies are the bedrock of a decarbonized future, harnessing natural resources to produce power with minimal emissions. This section delves into the main renewable sources: Solar PV, Wind Power, Hydropower, Geothermal Energy, and Biomass. We'll explore their working principles, market trends, advancements, and comparative performance to understand their unique contributions to the global energy transition.</p>
+            </div>
+            
+            <div class="mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button renewables-tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="solar">Solar PV</button>
+                        <button class="tab-button renewables-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="wind">Wind Power</button>
+                        <button class="tab-button renewables-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="hydro">Hydropower</button>
+                        <button class="tab-button renewables-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="geothermal">Geothermal</button>
+                        <button class="tab-button renewables-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="biomass">Biomass</button>
+                    </nav>
+                </div>
+
+                <div id="solar-content" class="renewables-content-tab mt-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Solar Photovoltaics (PV)</h3>
+                        <p class="mb-2">Converts sunlight directly into electricity using semiconductors. Dominant tech is crystalline silicon. Experiencing massive growth due to falling costs (module prices -50% in 2023) and policy support. Utility-scale solar is often the cheapest new electricity.</p>
+                        <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Advantages & Limitations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            <strong class="text-green-600">Advantages:</strong> Rapidly falling costs, scalability, mature tech, efficiency improvement potential.<br>
+                            <strong class="text-red-600">Limitations:</strong> Intermittency, land use, supply chain concentration, material recycling challenges.
+                        </div>
+                    </div>
+                </div>
+                <div id="wind-content" class="renewables-content-tab mt-6 hidden">
+                     <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Wind Power</h3>
+                        <p class="mb-2">Harnesses wind's kinetic energy. Onshore is cost-competitive; offshore offers stronger, consistent winds. Floating offshore is emerging for deep waters. R&D focuses on larger turbines, floating systems, and blade recycling.</p>
+                        <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Advantages & Limitations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            <strong class="text-green-600">Advantages:</strong> Zero fuel costs, cost-effective (onshore), abundant resource.<br>
+                            <strong class="text-red-600">Limitations:</strong> Intermittency, land use/visual impact (onshore), offshore costs, blade disposal, environmental impacts (wildlife).
+                        </div>
+                    </div>
+                </div>
+                <div id="hydro-content" class="renewables-content-tab mt-6 hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Hydropower</h3>
+                        <p class="mb-2">Uses water flow to spin turbines. Mature tech, includes reservoir, run-of-river, and Pumped Storage Hydro (PSH) – critical for grid-scale storage. Modernization of existing plants is key.</p>
+                        <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Advantages & Limitations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            <strong class="text-green-600">Advantages:</strong> Mature, cost-effective (existing), flexible, storage (reservoirs), high efficiency, multiple benefits (flood control).<br>
+                            <strong class="text-red-600">Limitations:</strong> Site specific, high upfront costs (new), environmental/social impacts, hydrology dependent, public acceptance.
+                        </div>
+                    </div>
+                </div>
+                <div id="geothermal-content" class="renewables-content-tab mt-6 hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Geothermal Energy</h3>
+                        <p class="mb-2">Uses Earth's internal heat. Conventional systems tap hydrothermal reservoirs. Enhanced Geothermal Systems (EGS) aim to create artificial reservoirs in hot dry rock. Offers baseload power and direct heat.</p>
+                        <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Advantages & Limitations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            <strong class="text-green-600">Advantages:</strong> Baseload/reliable power, small land footprint, direct use applications, domestic resource.<br>
+                            <strong class="text-red-600">Limitations:</strong> Site specific (conventional), high upfront costs (EGS), induced seismicity risk (EGS), water consumption (EGS).
+                        </div>
+                    </div>
+                </div>
+                <div id="biomass-content" class="renewables-content-tab mt-6 hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Biomass and Bioenergy</h3>
+                        <p class="mb-2">Derived from organic materials (crops, waste). Can produce heat, power, liquid/gaseous fuels. Advanced biofuels (from non-food sources) and BECCS (Bioenergy with Carbon Capture and Storage) are key R&D areas.</p>
+                        <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Advantages & Limitations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            <strong class="text-green-600">Advantages:</strong> Versatility, waste utilization, dispatchable power, biofuel compatibility, rural development.<br>
+                            <strong class="text-red-600">Limitations:</strong> Feedstock sustainability, lifecycle GHG emissions concerns, cost/efficiency of advanced tech, air pollution, logistics.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-slate-700 my-6">Comparative Analysis of Renewables</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Typical LCOE (USD/MWh)</h4>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="renewablesLcoeChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Typical Capacity Factor (%)</h4>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="renewablesCapacityFactorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                 <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xl font-semibold">Renewable Technologies: Detailed Comparison</h4>
+                    <input type="text" id="renewablesTableSearch" placeholder="Search table..." class="p-2 border border-gray-300 rounded-md text-sm">
+                </div>
+                <div class="table-container">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('renewablesTable', 0)">Technology</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('renewablesTable', 1)">Capacity Factor (%)</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('renewablesTable', 2)">LCOE (USD/MWh)</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('renewablesTable', 3)">GHG Emissions (gCO2eq/kWh)</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('renewablesTable', 4)">TRL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="renewablesTable" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                    </table>
+                </div>
+                 <p class="text-xs text-gray-500 mt-2">Note: LCOE, Land Use, Water Consumption, and GHG Emissions are highly site-specific and technology-dependent; ranges are indicative. TRLs are indicative. Click headers to sort.</p>
+            </div>
+        </section>
+
+        <section id="storage" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">Enabling Grid Flexibility: Energy Storage Systems</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">As variable renewables like solar and wind become more prevalent, energy storage systems (ESS) are vital for grid stability and efficient use of clean power. ESS bridge the gap between intermittent generation and fluctuating demand. This section explores electrochemical (batteries), thermal, hydrogen-based, and mechanical storage solutions.</p>
+                 <p class="text-md">Explore the different types of energy storage, their characteristics, and how they compare in terms of performance and application.</p>
+            </div>
+
+            <div class="mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button storage-tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="electrochemical">Electrochemical</button>
+                        <button class="tab-button storage-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="thermal">Thermal</button>
+                        <button class="tab-button storage-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="hydrogen-storage">Hydrogen</button>
+                        <button class="tab-button storage-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="mechanical">Mechanical</button>
+                    </nav>
+                </div>
+
+                <div id="electrochemical-content" class="storage-content-tab mt-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Electrochemical Storage (Batteries)</h3>
+                        <p class="mb-1"><strong>Lithium-ion (Li-ion):</strong> Dominant due to cost reductions and performance gains. LFP (Lithium Iron Phosphate) is favored for stationary storage (safety, long life, abundant materials). NMC (Nickel Manganese Cobalt) offers higher energy density for EVs. Supply chain concentration and recycling are key considerations.</p>
+                        <p class="mb-2"><strong>Emerging Tech:</strong> Sodium-ion (low cost, abundant sodium), Flow Batteries (long duration, scalable capacity like VRFB, Iron-flow), Solid-State (potential for high energy density, safety).</p>
+                         <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Key Considerations ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            Li-ion cost fell 90% since 2010. LFP has good safety and cycle life. NMC has higher energy density but relies on cobalt/nickel. Sodium-ion is promising for stationary storage due to low-cost materials. Flow batteries decouple power and energy, suiting long duration. Solid-state aims for breakthroughs in energy density and safety but faces manufacturing hurdles.
+                        </div>
+                    </div>
+                </div>
+                <div id="thermal-content" class="storage-content-tab mt-6 hidden">
+                     <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Thermal Energy Storage (TES)</h3>
+                        <p class="mb-1">Captures thermal energy for later use in heating/cooling or power generation. Market projected to triple by 2030.</p>
+                        <p class="mb-1"><strong>Sensible Heat:</strong> Changes temperature of a medium (water, molten salts in CSP). Simple, low cost.</p>
+                        <p class="mb-1"><strong>Latent Heat (PCMs):</strong> Uses phase change (solid/liquid) at constant temperature. High energy density. Challenges include low thermal conductivity.</p>
+                        <p class="mb-2"><strong>Thermochemical (TCS):</strong> Stores energy via reversible chemical reactions. Very high density, potential for long-term storage, less mature.</p>
+                         <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Applications & Future ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            TES is crucial for energy efficiency, VRE integration (e.g., solar thermal), and decarbonizing building heat/cool. Future focus: cost-effective, high-density, durable materials and systems.
+                        </div>
+                    </div>
+                </div>
+                <div id="hydrogen-storage-content" class="storage-content-tab mt-6 hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Hydrogen as an Energy Vector (Storage Aspect)</h3>
+                        <p class="mb-1">Hydrogen can be produced, stored, and reconverted. For storage: Compressed Gas (CGH2), Liquid (LH2), Material-based (metal hydrides, sorbents, LOHCs), Underground (salt caverns for large scale).</p>
+                        <p class="mb-2">Offers long-duration storage (GWh-TWh), vital for seasonal balancing and hard-to-abate sectors. Challenges: cost, efficiency losses, infrastructure needs. (More in Hydrogen section).</p>
+                         <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Storage Challenges ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            Low volumetric density requires high-pressure compression or energy-intensive liquefaction. Material-based storage offers higher densities but faces kinetic or weight issues. Underground storage is site-specific.
+                        </div>
+                    </div>
+                </div>
+                 <div id="mechanical-content" class="storage-content-tab mt-6 hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Mechanical Storage</h3>
+                        <p class="mb-1"><strong>Pumped Hydro (PHS):</strong> Most deployed grid-scale tech. Pumps water to upper reservoir, releases to generate. Large scale, long duration, high efficiency, long life. Site-specific, high upfront cost.</p>
+                        <p class="mb-1"><strong>Compressed Air (CAES):</strong> Stores compressed air underground. Large scale, long duration. Lower efficiency, site-specific, diabatic CAES uses natural gas.</p>
+                        <p class="mb-2"><strong>Flywheels (FES):</strong> Stores kinetic energy in fast-spinning rotor. Fast response, high power, long cycle life. Short duration, for frequency regulation.</p>
+                         <button class="details-toggle text-teal-600 hover:text-teal-700 font-semibold py-1">Suitability ➕➖</button>
+                        <div class="details-content mt-2 p-3 bg-slate-100 rounded">
+                            PHS and CAES are suited for longer duration, bulk energy storage. Flywheels excel at high-power, short-duration services like grid stability.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-2xl font-semibold text-slate-700 my-6">Comparative Analysis of Energy Storage</h3>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Typical Duration</h4>
+                     <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="storageDurationChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Round-Trip Efficiency (%)</h4>
+                     <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="storageEfficiencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-white rounded-lg shadow-lg p-6">
+                 <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xl font-semibold">Energy Storage Technologies: Detailed Comparison</h4>
+                    <input type="text" id="storageTableSearch" placeholder="Search table..." class="p-2 border border-gray-300 rounded-md text-sm">
+                </div>
+                <div class="table-container">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 0)">Technology</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 1)">Duration</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 2)">RTE (%)</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 3)">Cycle Life</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 4)">Cost (USD/kWh)</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable('storageTable', 5)">TRL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storageTable" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Note: Costs, TRLs, and other metrics are indicative and vary widely. RTE = Round-Trip Efficiency. Click headers to sort.</p>
+            </div>
+        </section>
+
+        <section id="hydrogen" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">The Hydrogen Ecosystem</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">Hydrogen is a versatile energy carrier key to decarbonizing hard-to-abate sectors like heavy industry and long-distance transport, and for long-duration energy storage. This section covers its production pathways (from grey to green), storage and transport infrastructure, and utilization across various sectors.</p>
+                <p class="text-md">Understanding the entire hydrogen value chain, from production to end-use, is essential for unlocking its potential in a low-carbon future. We'll examine the different "colors" of hydrogen, the challenges in handling it, and its diverse applications.</p>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-slate-700 mb-4">Hydrogen Production Pathways</h3>
+             <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Est. CO2 Emissions (kg CO2/kg H2)</h4>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="hydrogenProductionEmissionsChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-xl font-semibold text-center mb-2">Est. Cost (USD/kg H2, current)</h4>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="hydrogenProductionCostChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-slate-200 p-3 rounded-lg shadow"><strong>Grey H2:</strong> From fossil fuels (SMR) without CCUS. High CO2.</div>
+                <div class="bg-blue-200 p-3 rounded-lg shadow"><strong>Blue H2:</strong> Fossil fuels + CCUS. Lower CO2, depends on capture rate & methane leakage.</div>
+                <div class="bg-green-200 p-3 rounded-lg shadow"><strong>Green H2:</strong> Electrolysis with renewables. Zero CO2. Key: AEL, PEM, SOEC electrolyzers.</div>
+                <div class="bg-yellow-200 p-3 rounded-lg shadow"><strong>Turquoise H2:</strong> Methane pyrolysis (solid carbon byproduct). Low CO2 if C stored & RE used.</div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold text-slate-700 mb-3">Storage & Transportation</h3>
+                    <p class="mb-2"><strong>Storage:</strong> Compressed gas (CGH2), Liquid (LH2), Material-based (metal hydrides, LOHCs, ammonia), Underground (salt caverns).</p>
+                    <p class="mb-2"><strong>Transport:</strong> Pipelines (new or repurposed), Shipping (LH2, ammonia, LOHCs), Road/Rail.</p>
+                    <p class="font-semibold text-red-600">Challenges: Cost, efficiency, infrastructure build-out, safety standards.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold text-slate-700 mb-3">Utilization Across Sectors</h3>
+                     <ul class="space-y-2">
+                        <li class="flex items-start"><span class="text-teal-600 text-xl mr-2">🏭</span> <div><strong>Industry:</strong> Feedstock (ammonia, methanol), high-temp heat, steel (DRI).</div></li>
+                        <li class="flex items-start"><span class="text-teal-600 text-xl mr-2">🚚</span> <div><strong>Transport:</strong> HDVs (trucks, buses), shipping (ammonia, methanol), aviation (SAFs).</div></li>
+                        <li class="flex items-start"><span class="text-teal-600 text-xl mr-2">⚡</span> <div><strong>Power:</strong> Long-duration storage, peaking power (turbines, fuel cells), grid services.</div></li>
+                    </ul>
+                </div>
+            </div>
+             <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+                <h3 class="text-2xl font-semibold text-slate-700 mb-3">Challenges & Opportunities</h3>
+                <p class="mb-1"><strong class="text-red-600">Challenges:</strong> Cost of clean H2, efficiency losses, infrastructure needs, safety, water use (green H2), policy/regulation, public acceptance.</p>
+                <p><strong class="text-green-600">Opportunities:</strong> Decarbonize hard-to-abate sectors, energy security, VRE integration, economic growth, sector coupling.</p>
+            </div>
+        </section>
+
+        <section id="ccus" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">Mitigating Emissions: Carbon Capture, Utilization, and Storage (CCUS)</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">CCUS technologies capture CO2 emissions from large point sources (industrial plants, power stations) or directly from the atmosphere. The captured CO2 can then be utilized or permanently stored. CCUS is vital for net-zero strategies, especially for hard-to-abate sectors and carbon dioxide removal.</p>
+                <p class="text-md">This section outlines the main CO2 capture technologies. The full report details transport, utilization, and storage aspects, which are crucial for the complete CCUS chain.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Post-combustion Capture</h3>
+                    <p class="text-sm mb-2">Removes CO2 from flue gases AFTER combustion (e.g., power plants, cement). Uses solvents, sorbents, or membranes. Most mature, widely applicable.</p>
+                    <button class="details-toggle text-teal-600 hover:text-teal-700 text-sm font-semibold py-1">More Details ➕</button>
+                    <div class="details-content mt-2 p-2 bg-slate-100 rounded text-sm">
+                        <strong>Applications:</strong> Retrofitting existing power plants, cement, steel, waste incinerators.<br>
+                        <strong>Challenges:</strong> Energy penalty for regeneration, solvent degradation.
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Pre-combustion Capture</h3>
+                    <p class="text-sm mb-2">Removes carbon from fuel BEFORE combustion. Fuel is converted to syngas (H2 + CO2); CO2 is then separated. H2-rich fuel is combusted.</p>
+                     <button class="details-toggle text-teal-600 hover:text-teal-700 text-sm font-semibold py-1">More Details ➕</button>
+                    <div class="details-content mt-2 p-2 bg-slate-100 rounded text-sm">
+                        <strong>Applications:</strong> IGCC power plants, H2 production, ammonia plants.<br>
+                        <strong>Advantages:</strong> Higher CO2 concentration can make separation more efficient.
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Oxy-combustion Capture</h3>
+                    <p class="text-sm mb-2">Fuel is burned in nearly pure oxygen (not air). Results in flue gas mainly of CO2 and water, simplifying CO2 separation.</p>
+                    <button class="details-toggle text-teal-600 hover:text-teal-700 text-sm font-semibold py-1">More Details ➕</button>
+                    <div class="details-content mt-2 p-2 bg-slate-100 rounded text-sm">
+                        <strong>Mechanism:</strong> Requires Air Separation Unit (ASU) for oxygen production.<br>
+                        <strong>Challenges:</strong> Cost and energy consumption of ASU.
+                    </div>
+                </div>
+                 <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Direct Air Capture (DAC)</h3>
+                    <p class="text-sm mb-2">Extracts CO2 directly from ambient air (very low CO2 concentration, ~400 ppm). Technologies include solid sorbents or liquid solvents. More energy-intensive and costly than point source capture but essential for negative emissions.</p>
+                    <button class="details-toggle text-teal-600 hover:text-teal-700 text-sm font-semibold py-1">More Details ➕</button>
+                    <div class="details-content mt-2 p-2 bg-slate-100 rounded text-sm">
+                        <strong>Significance:</strong> Can address diffuse emissions and historical CO2. Key for carbon dioxide removal (CDR) strategies.<br>
+                        <strong>Challenges:</strong> High energy demand, cost, scaling.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="path-forward" class="mb-12 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-teal-700 mb-6">The Path Forward: Key Enablers & Considerations</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <p class="mb-4 text-lg">Navigating the complex energy transition requires a holistic, integrated, and adaptive approach. Success hinges on several cross-cutting enablers and careful consideration of various impacts. This section highlights the critical factors that will shape a sustainable, secure, and equitable low-carbon future.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">🚀 Technological Innovation</h3>
+                    <p>Continuous R&D is needed across all areas – renewables, storage, hydrogen, CCUS, smart grids, and advanced materials – to improve efficiency, reduce costs, and develop next-generation solutions.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">💸 Investment & Finance</h3>
+                    <p>Substantial and strategically directed investment is crucial. Innovative financing mechanisms and clear market signals are needed to mobilize capital for clean energy projects and infrastructure.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">📜 Policy & Regulation</h3>
+                    <p>Robust, adaptable, and long-term policy frameworks are essential. This includes carbon pricing, incentives, standards, streamlined permitting, and support for early-stage technologies.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">🤝 International Cooperation</h3>
+                    <p>Global challenges require global solutions. Collaboration on research, technology transfer, standards, and financial support for developing countries is vital.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">⚖️ Just Transition</h3>
+                    <p>Ensuring an equitable distribution of benefits and mitigating adverse socio-economic impacts (e.g., job shifts, community impacts) is fundamental for societal acceptance and sustainability.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-teal-600 mb-2">🌳 Environmental & Resource Management</h3>
+                    <p>Careful management of land use, water consumption, material sourcing (critical minerals), and waste/recycling for clean energy technologies is necessary to ensure overall sustainability.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-8 text-center">
+        <p>&copy; 2024 Energy Transition Explorer. Based on "Navigating the Global Energy Transition" report.</p>
+        <p class="text-sm mt-1">This is a conceptual application for information exploration.</p>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Smooth scroll for nav links and active state
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+                if (mobileMenu.classList.contains('hidden') === false) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+        
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll("nav a.nav-link");
+
+        window.onscroll = () => {
+            let current = "";
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 80) { // 80 for nav height + شويه offset
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach((link) => {
+                link.classList.remove("active");
+                if (link.getAttribute("href").includes(current)) {
+                    link.classList.add("active");
+                }
+            });
+        };
+
+
+        // Tab functionality
+        function setupTabs(tabButtonClass, contentClassPrefix) {
+            const tabButtons = document.querySelectorAll(`.${tabButtonClass}`);
+            const contentTabs = document.querySelectorAll(`.${contentClassPrefix}-tab`);
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    contentTabs.forEach(tab => tab.classList.add('hidden'));
+                    document.getElementById(`${button.dataset.tab}-content`).classList.remove('hidden');
+                });
+            });
+        }
+        setupTabs('renewables-tab', 'renewables-content');
+        setupTabs('storage-tab', 'storage-content');
+
+        // Details toggle functionality
+        document.querySelectorAll('.details-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                content.classList.toggle('open');
+                button.textContent = content.classList.contains('open') ? button.textContent.replace('➕', '➖') : button.textContent.replace('➖', '➕');
+            });
+        });
+
+        // Data for charts and tables
+        const renewablesData = [
+            { tech: 'Solar PV (Utility)', cf_min: 15, cf_max: 30, lcoe_min: 30, lcoe_max: 60, ghg: 40, trl: 9, land: '20-50 m²/MWh/yr', water: 'Negligible' },
+            { tech: 'Onshore Wind', cf_min: 25, cf_max: 45, lcoe_min: 30, lcoe_max: 70, ghg: 12, trl: 9, land: '1-5 (footprint)', water: 'Negligible' },
+            { tech: 'Offshore Wind', cf_min: 40, cf_max: 55, lcoe_min: 70, lcoe_max: 150, ghg: 15, trl: '8-9', land: 'Negligible (sea)', water: 'Negligible' },
+            { tech: 'Hydropower', cf_min: 40, cf_max: 90, lcoe_min: 20, lcoe_max: 200, ghg: 24, trl: 9, land: 'Variable', water: 'Variable' }, // LCOE 20-80 existing, 50-200 new
+            { tech: 'Geothermal', cf_min: 70, cf_max: 90, lcoe_min: 50, lcoe_max: 100, ghg: 38, trl: '7-9 (EGS 5-7)', land: '0.5-5 m²/MWh/yr', water: 'Variable' },
+            { tech: 'Biomass (Combustion)', cf_min: 70, cf_max: 85, lcoe_min: 60, lcoe_max: 150, ghg: 'Highly Variable', trl: 9, land: 'Very High', water: 'Variable' },
+        ];
+
+        const storageData = [
+            { tech: 'Li-ion (LFP)', duration: 'Sec-Hrs', rte_min: 85, rte_max: 95, cycle: '3k-12k+', cost: '250-450', trl: 9 },
+            { tech: 'Li-ion (NMC/NCA)', duration: 'Sec-Hrs', rte_min: 85, rte_max: 95, cycle: '1k-4k', cost: '300-500', trl: 9 },
+            { tech: 'Sodium-ion', duration: 'Sec-Hrs', rte_min: 80, rte_max: 90, cycle: '2k-5k', cost: '< LFP (pot.)', trl: '6-8' },
+            { tech: 'VRFB', duration: 'Hrs-Days', rte_min: 65, rte_max: 80, cycle: '10k-20k+', cost: '350-600', trl: '8-9' },
+            { tech: 'Zinc-Flow', duration: 'Hrs-Days', rte_min: 60, rte_max: 75, cycle: '2k-6k+', cost: 'Variable', trl: '6-8' },
+            { tech: 'Iron-Flow', duration: 'Hrs-Days', rte_min: 68, rte_max: 72, /* approx 70 */ cycle: '10k+', cost: 'Low (pot.)', trl: '6-7' },
+            { tech: 'Organic Flow', duration: 'Hrs-Days', rte_min: 60, rte_max: 75, cycle: '10k+', cost: 'Low (target)', trl: '5-7' },
+            { tech: 'Solid-State', duration: 'Sec-Hrs', rte_min: 90, rte_max: 95, /* target >90 */ cycle: '>1k-10k (target)', cost: 'High (R&D)', trl: '4-6' },
+            { tech: 'Molten Salt TES', duration: 'Hrs-Days', rte_min: 90, rte_max: 95, cycle: 'Many thousands', cost: '20-50 (media)', trl: 9 },
+            { tech: 'PCM TES', duration: 'Hrs-Days', rte_min: 75, rte_max: 90, cycle: 'Many thousands', cost: 'Variable', trl: '6-9' },
+            { tech: 'Thermochemical TES', duration: 'Days-Seasonal', rte_min: 60, rte_max: 80, cycle: 'Variable', cost: 'High (R&D)', trl: '3-7' },
+            { tech: 'H2 (Electrolysis-FC)', duration: 'Hrs-Seasonal', rte_min: 30, rte_max: 50, cycle: 'Variable', cost: 'High', trl: '6-8' },
+            { tech: 'PHS', duration: 'Hrs-Days', rte_min: 70, rte_max: 85, cycle: '10k-50k+', cost: '100-300 (new)', trl: 9 },
+            { tech: 'CAES', duration: 'Hrs-Days', rte_min: 40, rte_max: 70, cycle: '10k+', cost: '100-200', trl: '7-8' },
+            { tech: 'Flywheel', duration: 'Sec-Mins', rte_min: 85, rte_max: 95, cycle: '100k-Millions', cost: 'High ($/kWh)', trl: 9 },
+        ];
+        
+        const hydrogenProductionData = [
+            { pathway: 'Grey', emissions_min: 10, emissions_max: 19, cost_min: 1, cost_max: 2.5, trl: 9 },
+            { pathway: 'Blue', emissions_min: 1, emissions_max: 4, cost_min: 2, cost_max: 4, trl: '7-8' },
+            { pathway: 'Green (AEL)', emissions_min: 0, emissions_max: 0.5, /* approx 0 */ cost_min: 3, cost_max: 7, trl: 9 },
+            { pathway: 'Green (PEM)', emissions_min: 0, emissions_max: 0.5, cost_min: 4, cost_max: 8, trl: '8-9' },
+            { pathway: 'Green (SOEC)', emissions_min: 0, emissions_max: 0.5, cost_min: 3, cost_max: 6, trl: '6-7' },
+            { pathway: 'Turquoise', emissions_min: 0.5, emissions_max: 2, /* low */ cost_min: 2, cost_max: 5, trl: '4-6' },
+        ];
+
+        const chartColors = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63', '#a5f3fc', '#67e8f9', '#22d3ee'];
+        const chartBorderColor = '#cbd5e1';
+
+        // Chart.js: Renewables LCOE
+        new Chart(document.getElementById('renewablesLcoeChart'), {
+            type: 'bar',
+            data: {
+                labels: renewablesData.map(d => d.tech),
+                datasets: [{
+                    label: 'Min LCOE (USD/MWh)',
+                    data: renewablesData.map(d => d.lcoe_min),
+                    backgroundColor: chartColors[0],
+                    borderColor: chartBorderColor,
+                    borderWidth: 1
+                }, {
+                    label: 'Max LCOE (USD/MWh)',
+                    data: renewablesData.map(d => d.lcoe_max),
+                    backgroundColor: chartColors[1],
+                    borderColor: chartBorderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                scales: { x: { beginAtZero: true, title: { display: true, text: 'LCOE (USD/MWh)' } } },
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+        // Chart.js: Renewables Capacity Factor
+        new Chart(document.getElementById('renewablesCapacityFactorChart'), {
+            type: 'bar',
+            data: {
+                labels: renewablesData.map(d => d.tech),
+                datasets: [{
+                    label: 'Min Capacity Factor (%)',
+                    data: renewablesData.map(d => d.cf_min),
+                    backgroundColor: chartColors[2],
+                    borderColor: chartBorderColor,
+                    borderWidth: 1
+                }, {
+                    label: 'Max Capacity Factor (%)',
+                    data: renewablesData.map(d => d.cf_max),
+                    backgroundColor: chartColors[3],
+                    borderColor: chartBorderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                scales: { x: { beginAtZero: true, title: { display: true, text: 'Capacity Factor (%)' } } },
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+        // Chart.js: Storage Duration (Qualitative mapping for chart)
+        const storageDurationMapping = { 'Sec-Mins': 1, 'Sec-Hrs': 2, 'Hrs-Days': 3, 'Days-Seasonal': 4, 'Hrs-Seasonal': 4};
+        new Chart(document.getElementById('storageDurationChart'), {
+            type: 'bar',
+            data: {
+                labels: storageData.map(d => d.tech),
+                datasets: [{
+                    label: 'Typical Duration (Qualitative Scale)',
+                    data: storageData.map(d => storageDurationMapping[d.duration] || 0),
+                    backgroundColor: chartColors[4],
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                scales: { 
+                    x: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'Duration Category' },
+                        ticks: {
+                            callback: function(value, index, values) {
+                                const mapping = {1: 'Sec-Mins', 2: 'Sec-Hrs', 3: 'Hrs-Days', 4: 'Days/Hrs-Seasonal'};
+                                return mapping[value] || '';
+                            }
+                        }
+                    } 
+                },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return storageData[context.dataIndex].duration; } } } }
+            }
+        });
+
+        // Chart.js: Storage Efficiency
+        new Chart(document.getElementById('storageEfficiencyChart'), {
+            type: 'bar',
+            data: {
+                labels: storageData.map(d => d.tech),
+                datasets: [{
+                    label: 'Min RTE (%)',
+                    data: storageData.map(d => d.rte_min),
+                    backgroundColor: chartColors[5],
+                }, {
+                    label: 'Max RTE (%)',
+                    data: storageData.map(d => d.rte_max),
+                    backgroundColor: chartColors[6],
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                scales: { x: { beginAtZero: true, title: { display: true, text: 'Round-Trip Efficiency (%)' } } },
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+        
+        // Chart.js: Hydrogen Production Emissions
+        new Chart(document.getElementById('hydrogenProductionEmissionsChart'), {
+            type: 'bar',
+            data: {
+                labels: hydrogenProductionData.map(d => d.pathway),
+                datasets: [{
+                    label: 'Min Emissions (kg CO2/kg H2)',
+                    data: hydrogenProductionData.map(d => d.emissions_min),
+                    backgroundColor: chartColors[0],
+                }, {
+                    label: 'Max Emissions (kg CO2/kg H2)',
+                    data: hydrogenProductionData.map(d => d.emissions_max),
+                    backgroundColor: chartColors[1],
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'kg CO2 / kg H2' } } },
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+        // Chart.js: Hydrogen Production Cost
+        new Chart(document.getElementById('hydrogenProductionCostChart'), {
+            type: 'bar',
+            data: {
+                labels: hydrogenProductionData.map(d => d.pathway),
+                datasets: [{
+                    label: 'Min Cost (USD/kg H2)',
+                    data: hydrogenProductionData.map(d => d.cost_min),
+                    backgroundColor: chartColors[2],
+                }, {
+                    label: 'Max Cost (USD/kg H2)',
+                    data: hydrogenProductionData.map(d => d.cost_max),
+                    backgroundColor: chartColors[3],
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'USD / kg H2' } } },
+                plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+
+        // Populate tables
+        function populateTable(tableId, data, columns) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = ''; // Clear existing rows
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                columns.forEach(col => {
+                    const cell = row.insertCell();
+                    cell.textContent = item[col.key] !== undefined ? item[col.key] : (item[col.key + '_min'] !== undefined ? `${item[col.key + '_min']}-${item[col.key + '_max']}` : 'N/A');
+                    cell.className = 'px-3 py-2 whitespace-nowrap text-sm text-slate-700';
+                });
+            });
+        }
+        
+        const renewablesTableColumns = [
+            { key: 'tech', name: 'Technology' }, { key: 'cf', name: 'Capacity Factor (%)' }, 
+            { key: 'lcoe', name: 'LCOE (USD/MWh)' }, { key: 'ghg', name: 'GHG Emissions (gCO2eq/kWh)' },
+            { key: 'trl', name: 'TRL' }
+        ];
+        populateTable('renewablesTable', renewablesData, renewablesTableColumns);
+
+        const storageTableColumns = [
+            { key: 'tech', name: 'Technology' }, { key: 'duration', name: 'Duration' },
+            { key: 'rte', name: 'RTE (%)' }, { key: 'cycle', name: 'Cycle Life' },
+            { key: 'cost', name: 'Cost (USD/kWh)' }, { key: 'trl', name: 'TRL' }
+        ];
+        populateTable('storageTable', storageData, storageTableColumns);
+
+        // Table sorting and filtering
+        let sortDirections = {};
+
+        function sortTable(tableId, columnIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.rows);
+            const headerCell = table.tHead.rows[0].cells[columnIndex];
+            
+            const columnKey = tableId === 'renewablesTable' ? renewablesTableColumns[columnIndex].key : storageTableColumns[columnIndex].key;
+            
+            // Determine sort direction
+            const currentDirection = sortDirections[`${tableId}-${columnIndex}`] || 'asc';
+            const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+            sortDirections[`${tableId}-${columnIndex}`] = newDirection;
+
+            // Reset arrows
+            Array.from(table.tHead.rows[0].cells).forEach(cell => {
+                cell.innerHTML = cell.innerHTML.replace(/ (↑|↓)$/, '');
+            });
+            // Add arrow to current column
+            headerCell.innerHTML += newDirection === 'asc' ? ' ↑' : ' ↓';
+
+            rows.sort((a, b) => {
+                let valA = a.cells[columnIndex].textContent.trim();
+                let valB = b.cells[columnIndex].textContent.trim();
+
+                // Handle numeric ranges (e.g., "15-30") by taking the lower bound or average
+                const parseValue = (val) => {
+                    if (val.includes('-') && !isNaN(parseFloat(val.split('-')[0]))) {
+                        return parseFloat(val.split('-')[0]); // Sort by min of range
+                    }
+                    const num = parseFloat(val);
+                    return isNaN(num) ? val.toLowerCase() : num;
+                };
+
+                valA = parseValue(valA);
+                valB = parseValue(valB);
+                
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return newDirection === 'asc' ? valA - valB : valB - valA;
+                } else {
+                    return newDirection === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const rows = table.tBodies[0].rows;
+
+            for (let i = 0; i < rows.length; i++) {
+                let match = false;
+                for (let j = 0; j < rows[i].cells.length; j++) {
+                    if (rows[i].cells[j].textContent.toLowerCase().includes(filter)) {
+                        match = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = match ? "" : "none";
+            }
+        }
+
+        document.getElementById('renewablesTableSearch').addEventListener('keyup', () => filterTable('renewablesTableSearch', 'renewablesTable'));
+        document.getElementById('storageTableSearch').addEventListener('keyup', () => filterTable('storageTableSearch', 'storageTable'));
+
+    </script>
+</body>
+</html>
